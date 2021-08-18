@@ -1,0 +1,45 @@
+#Dependencies
+import numpy as np
+import pandas as pd
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.utils import normalize, np_utils
+from keras.wrappers.scikit_learn import KerasClassifier
+from sklearn.model_selection import train_test_split,cross_val_score,KFold
+from sklearn.preprocessing import LabelEncoder
+from sklearn.pipeline import Pipeline
+
+#Load Dataset
+data = pd.read_csv("data/Tar-Print-Data-wFall-wWater.csv",index_col=0)
+x_train = data.iloc[:,:9].values
+y_train = data.iloc[:,9:10].values
+
+# encode class values as integers
+encoder_train = LabelEncoder()
+y_train = y_train.ravel()
+encoder_train.fit(y_train)
+encoded_train_y = encoder_train.transform(y_train)
+print(y_train)
+print(encoded_train_y)
+
+# convert integers to dummy variables (i.e. one hot encoded)
+binary_train_y = np_utils.to_categorical(encoded_train_y)
+
+### MODEL DEFINITION AND PROPERTIES
+# define the keras model
+model = Sequential()
+model.add(Dense(125, input_dim=9, activation='relu'))
+model.add(Dense(125, activation='relu'))
+model.add(Dense(125, activation='relu'))
+model.add(Dense(7, activation='softmax'))
+
+x_train = normalize(x_train, axis=1)  # scales data between 0 and 1
+print(x_train)
+
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# fit the keras model on the dataset
+print(x_train.shape)
+print(binary_train_y.shape)
+model.fit(x_train, binary_train_y, epochs=185, batch_size=12)
+model.save('Models/wFall-wWater-Models/Model-6/ML-Model.model')
